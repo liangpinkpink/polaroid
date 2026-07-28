@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#d86f58">
+  <title>拍一张 · Polaroid</title>
+  <link rel="stylesheet" href="polaroid.css">
+</head>
+<body>
+  <main class="scene">
+    <aside id="cameraSwitcher" class="camera-switcher" aria-label="切换拍立得相机">
+      <div id="cameraOptions" class="camera-options"></div>
+    </aside>
+
+    <div class="background-customizer">
+      <button id="backgroundToggle" class="background-toggle" type="button" aria-label="自定义背景" aria-expanded="false">
+        <i></i><i></i><i></i><i></i>
+      </button>
+      <div id="backgroundPanel" class="background-panel" hidden>
+        <input id="backgroundColor" class="background-color" type="color" value="#f7f4ec" aria-label="选择背景颜色" title="选择背景颜色">
+        <label class="background-upload" aria-label="上传背景图片" title="上传背景图片">
+          <input id="backgroundImage" type="file" accept="image/*">
+          <span aria-hidden="true">▧</span>
+        </label>
+        <button id="backgroundReset" class="background-reset" type="button" aria-label="恢复默认背景" title="恢复默认背景">↺</button>
+      </div>
+    </div>
+
+    <section id="cameraStage" class="camera-stage" aria-label="拍立得相机">
+      <div class="camera-wrap">
+        <button id="camera" class="camera" type="button" aria-label="点击相机拍照">
+          <img id="cameraImage" class="camera-image" src="assets/cameras/simple-1.png" alt="">
+          <span class="camera-top"><i></i></span>
+          <span class="viewfinder"><i></i></span>
+          <span class="flash"><i></i></span>
+          <span class="rainbow" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="lens"><i><b></b></i></span>
+          <span class="shutter"><i></i></span>
+          <span class="slot"></span>
+        </button>
+
+        <div id="paperChute" class="paper-chute">
+          <article id="developing" class="polaroid developing" aria-live="polite">
+            <div class="photo-window"><img id="currentPhoto" alt="随机回忆"></div>
+          </article>
+        </div>
+      </div>
+      <button id="okButton" class="ok-button" type="button">OK</button>
+    </section>
+
+    <section id="collection" class="collection" aria-label="已经拍下的照片">
+      <div id="photoPile" class="photo-pile"></div>
+    </section>
+  </main>
+  <div id="flashScreen" class="flash-screen" aria-hidden="true"></div>
+  <script src="photos.js"></script>
+  <script src="polaroid.js"></script>
+</body>
+</html>
