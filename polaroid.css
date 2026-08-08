@@ -112,6 +112,14 @@ h1 { margin:0; font:400 clamp(42px,6vw,68px)/1 "DM Serif Display","Noto Sans SC"
 .paper-chute .developing { position:absolute; left:107px; top:0; opacity:1; transform-origin:50% 0; transform:perspective(760px) rotateX(68deg); backface-visibility:hidden; will-change:transform; box-shadow:0 12px 20px #473d3230,0 3px 7px #473d3220; }
 .paper-chute .developing.ejecting { animation:paper-release 3s both; opacity:1; }
 .paper-chute .developing.ejecting .photo-window::after { display:none; }
+.paper-chute .developing .photo-window img { opacity:0; filter:sepia(.35) saturate(.45) contrast(.82) brightness(1.12); transform:scale(1.012); }
+.paper-chute .developing .photo-window img.revealing { animation:photo-develop 1.7s cubic-bezier(.2,.62,.24,1) both; }
+@keyframes photo-develop {
+  0% { opacity:.03; filter:sepia(.42) saturate(.35) contrast(.78) brightness(1.16); transform:scale(1.012); }
+  38% { opacity:.42; filter:sepia(.25) saturate(.62) contrast(.88) brightness(1.08); }
+  72% { opacity:.82; filter:sepia(.08) saturate(.88) contrast(.96) brightness(1.02); }
+  100% { opacity:1; filter:none; transform:scale(1); }
+}
 @keyframes paper-release {
   0% {
     transform:perspective(760px) translate3d(0,-300px,0) rotateX(68deg);

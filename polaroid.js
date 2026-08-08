@@ -30,6 +30,10 @@
   let printListener = null;
   let shotToken = 0;
   let activeBackgroundUrl = '';
+  let photoDeck = [];
+  let printFinished = false;
+  let developFinished = false;
+  const photoCache = new Map();
 
   const backgroundStorage = {
     color: 'polaroid-background-color',
@@ -448,32 +452,91 @@
 
   const physics = new PhotoPile(pile);
 
-  function choosePhoto() {
-    if (!photos.length) return null;
-    const next = photos[Math.floor(Math.random() * photos.length)];
-    return photos.length > 1 && current && next.src === current.src ? choosePhoto() : next;
+  function shuffledPhotos() {
+    const deck = [...photos];
+    for (let index = deck.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [deck[index], deck[swapIndex]] = [deck[swapIndex], deck[index]];
+    }
+    return deck;
   }
 
-  async function shoot() {
+  function ensurePhotoDeck() {
+    if (photoDeck.length < 12) photoDeck.push(...shuffledPhotos());
+  }
+
+  function loadPhoto(photo) {
+    if (photoCache.has(photo.src)) return photoCache.get(photo.src);
+    const loading = new Promise(resolve => {
+      const loader = new Image();
+      loader.decoding = 'async';
+      loader.addEventListener('load', async () => {
+        try { await loader.decode(); } catch { /* The loaded image is still usable. */ }
+        resolve(photo);
+      }, { once:true });
+      loader.addEventListener('error', () => resolve(photo), { once:true });
+      loader.src = photo.src;
+    });
+    photoCache.set(photo.src, loading);
+    return loading;
+  }
+
+  function preloadUpcomingPhotos(amount = 10) {
+    ensurePhotoDeck();
+    photoDeck.slice(0, amount).forEach(loadPhoto);
+  }
+
+  function choosePhoto() {
+    if (!photos.length) return null;
+    ensurePhotoDeck();
+    const next = photoDeck.shift();
+    preloadUpcomingPhotos();
+    return next;
+  }
+
+  function showOkWhenReady(token) {
+    if (token !== shotToken || !printFinished || !developFinished) return;
+    ok.classList.add('show');
+    ok.focus({ preventScroll:true });
+  }
+
+  function revealPhoto(photo, token) {
+    loadPhoto(photo).then(async () => {
+      if (token !== shotToken) return;
+      image.src = photo.src;
+      try { await image.decode(); } catch { /* Browser cache can still supply the image. */ }
+      if (token !== shotToken) return;
+      image.classList.remove('revealing');
+      void image.offsetWidth;
+      const onDeveloped = event => {
+        if (event.animationName !== 'photo-develop') return;
+        image.removeEventListener('animationend', onDeveloped);
+        developFinished = true;
+        showOkWhenReady(token);
+      };
+      image.addEventListener('animationend', onDeveloped);
+      image.classList.add('revealing');
+    });
+  }
+
+  function shoot() {
     if (camera.disabled) return;
     current = choosePhoto();
     if (!current) return;
     const token = ++shotToken;
+    printFinished = false;
+    developFinished = false;
     camera.disabled = true;
     ok.classList.remove('show');
     sheet.classList.remove('ejecting');
     chute.classList.remove('ejecting');
+    image.classList.remove('revealing');
+    image.removeAttribute('src');
     flash.classList.remove('fire');
     void flash.offsetWidth;
     flash.classList.add('fire');
-    image.src = current.src;
+    revealPhoto(current, token);
     image.alt = current.title || '随机回忆';
-    try {
-      await image.decode();
-    } catch {
-      // The image can still render even when decode() is unavailable.
-    }
-    if (token !== shotToken) return;
     void chute.offsetWidth;
     chute.classList.add('ejecting');
     sheet.classList.add('ejecting');
@@ -482,8 +545,8 @@
       if (event.animationName !== 'paper-release') return;
       sheet.removeEventListener('animationend', printListener);
       printListener = null;
-      ok.classList.add('show');
-      ok.focus({ preventScroll: true });
+      printFinished = true;
+      showOkWhenReady(token);
     };
     sheet.addEventListener('animationend', printListener);
   }
@@ -504,4 +567,5 @@
 
   camera.addEventListener('click', shoot);
   ok.addEventListener('click', keepPhoto);
+  preloadUpcomingPhotos();
 })();
